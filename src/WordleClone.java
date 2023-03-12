@@ -54,7 +54,7 @@ public class WordleClone extends Application {
 
         //Creates text for introduction and description messages
         Text introduction = new Text(50, -150, "Welcome to my Wordle Clone!");
-        Text description = new Text(30, -100, "The goal of the game is to guess the correct word, \nyou will have 6 attempts to guess, whether you win or \nlose you get to try again with a new word! \n\n                                 GOOD LUCK!!!");
+        Text description = new Text(30, -100, "The goal of the game is to guess the correct word, \nyou will have 6 attempts to guess, whether you win or \nlose you get to try again with a new word!\nUse arrows to navigate letters \n\n                                 GOOD LUCK!!!");
 
         //Changes font for introduction and description
         introduction.setFont(Font.font("Verdana", 20));
@@ -81,7 +81,7 @@ public class WordleClone extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-
+    //ActionEvents that will be triggered when keys are released to navigate TextFields
         letters[0].setOnKeyReleased(e -> {
             if(letters[0].getText().length() >= 1){
                 letters[1].requestFocus();
@@ -89,11 +89,17 @@ public class WordleClone extends Application {
             if(e.getCode() == KeyCode.ENTER){
                 letters[0].requestFocus();
             }
+            if(e.getCode() == KeyCode.LEFT) {
+                letters[4].requestFocus();
+            }
         });
 
         letters[1].setOnKeyReleased(e -> {
             if(letters[1].getText().length() >= 1){
                 letters[2].requestFocus();
+            }
+            if(e.getCode() == KeyCode.LEFT) {
+                letters[0].requestFocus();
             }
         });
 
@@ -101,11 +107,25 @@ public class WordleClone extends Application {
             if(letters[2].getText().length() >= 1){
                 letters[3].requestFocus();
             }
+            if(e.getCode() == KeyCode.LEFT) {
+                letters[1].requestFocus();
+            }
         });
 
         letters[3].setOnKeyReleased(e -> {
             if(letters[3].getText().length() >= 1){
                 letters[4].requestFocus();
+            }
+            if(e.getCode() == KeyCode.LEFT) {
+                letters[2].requestFocus();
+            }
+        });
+        letters[4].setOnKeyReleased(e ->{
+            if(e.getCode() == KeyCode.LEFT) {
+                letters[3].requestFocus();
+            }
+            if(e.getCode() == KeyCode.RIGHT){
+                letters[0].requestFocus();
             }
         });
 
@@ -162,7 +182,7 @@ public class WordleClone extends Application {
         System.out.println(guess);
         for (int i = 0; i < guess.length(); i++) {
 
-            //Compares ith character of guess to ith character in answer, will change TextField to green and sets editable to false if letter is in the correct place in the word,
+            //Compares ith character of guess to ith character in answer, will change TextField to green and sets editable to false if correct letter is in the correct place in the word,
             //yellow if the letter is in the word, but not in the right place and red if the letter is not in the word at all
             if (guess.charAt(i) == answer.charAt(i)) {
                 letters[i].setStyle("-fx-background-color: green");
