@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.scene.Group;
 import javafx.scene.layout.BorderPane;
@@ -21,6 +22,9 @@ import javafx.scene.control.Button;
 
 
 public class WordleClone extends Application {
+
+    //Initialize variable guesses
+    private int guesses = 0;
 
     @Override
 
@@ -62,8 +66,7 @@ public class WordleClone extends Application {
 
         vBox.getChildren().addAll(introduction, description);
 
-        //Initialize variable guesses
-        int guesses = 0;
+
 
         //Fills pane with vBox and hBox, vBox, which contains introduction and description is at the top, and the hBox, which has the TextFields is in the center
         pane.setCenter(hBox);
@@ -135,12 +138,14 @@ public class WordleClone extends Application {
                 String guess = "";
 
                 if(e.getCode() == KeyCode.ENTER) {
+                    //Increment guesses by 1 every time enter is pressed
+                    guesses++;
                     //Concatenates first letter of TextField to guess
                     for (int i = 0; i < 5; i++)
                         guess = guess.concat(letters[i].getText(0, 1));
                 }
                     //Calls checkGuess function
-                    checkGuess(guess, letters, answer, pane, incrementGuesses(guesses));
+                    checkGuess(guess, letters, answer, pane, guesses);
                     letters[0].requestFocus();
             });
 
@@ -178,6 +183,10 @@ public class WordleClone extends Application {
         //Function that will compare guess to answer
 
         HBox guessesBox = new HBox();
+        Popup popup = new Popup();
+        Stage stage = new Stage();
+        Text correctAnswer = new Text("The correct answer is " + answer);
+        correctAnswer.setFont(Font.font("Verdana", 14));
 
         System.out.println(guess);
         for (int i = 0; i < guess.length(); i++) {
@@ -194,16 +203,14 @@ public class WordleClone extends Application {
             }
         }
         Text guessText = new Text("Guesses: " + guesses);
-        guessesBox.getChildren().add(guessText);
+        if(guesses >= 6){
+            popup.show(stage);
+        }
+       guessesBox.getChildren().add(guessText);
 
         pane.setBottom(guessesBox);
 
         return guess;
 
     }
-    private int incrementGuesses(int guesses){
-        guesses += 1;
-        return guesses;
-    }
-
 }
