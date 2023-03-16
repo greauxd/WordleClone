@@ -152,7 +152,7 @@ public class WordleClone extends Application {
             }
 
     private static String getAnswer() {
-
+        String answer;
         //Function that will return a random word from dictionary txt file, and assigns it to variable answer
 
         try {
@@ -165,7 +165,7 @@ public class WordleClone extends Application {
 
             while ((file.readLine()) != null) {
                 if (index == line) {
-                    String answer = (file.readLine());
+                    answer = (file.readLine());
                     return answer;
 
                 }
