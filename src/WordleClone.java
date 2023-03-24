@@ -2,16 +2,12 @@ import java.io.*;
 import java.util.Random;
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.scene.Group;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -25,6 +21,9 @@ public class WordleClone extends Application {
 
     //Initialize variable guesses
     private int guesses = 0;
+    private String guess = "";
+    //StringBuffer for answer, so it can be changed
+    private StringBuffer answer = new StringBuffer();
 
     @Override
 
@@ -66,17 +65,12 @@ public class WordleClone extends Application {
 
         vBox.getChildren().addAll(introduction, description);
 
-
-
         //Fills pane with vBox and hBox, vBox, which contains introduction and description is at the top, and the hBox, which has the TextFields is in the center
         pane.setCenter(hBox);
         pane.setTop(vBox);
 
-        // Calls function getAnswer to get random word from text file
-        String answer = getAnswer();
-
-        System.out.println(answer);
-
+        // Calls function getAnswer to get random word from text file and sets it to StringBuffer
+        answer.replace(0, 4, getAnswer());
 
         //Creates scene and sets it
         Scene scene = new Scene(pane, 650, 400);
@@ -101,7 +95,7 @@ public class WordleClone extends Application {
             if(letters[1].getText().length() >= 1){
                 letters[2].requestFocus();
             }
-            if(e.getCode() == KeyCode.LEFT) {
+            if(e.getCode() == KeyCode.LEFT || e.getCode() == KeyCode.BACK_SPACE) {
                 letters[0].requestFocus();
             }
         });
@@ -110,7 +104,7 @@ public class WordleClone extends Application {
             if(letters[2].getText().length() >= 1){
                 letters[3].requestFocus();
             }
-            if(e.getCode() == KeyCode.LEFT) {
+            if(e.getCode() == KeyCode.LEFT || e.getCode() == KeyCode.BACK_SPACE) {
                 letters[1].requestFocus();
             }
         });
@@ -119,12 +113,12 @@ public class WordleClone extends Application {
             if(letters[3].getText().length() >= 1){
                 letters[4].requestFocus();
             }
-            if(e.getCode() == KeyCode.LEFT) {
+            if(e.getCode() == KeyCode.LEFT || e.getCode() == KeyCode.BACK_SPACE) {
                 letters[2].requestFocus();
             }
         });
         letters[4].setOnKeyReleased(e ->{
-            if(e.getCode() == KeyCode.LEFT) {
+            if(e.getCode() == KeyCode.LEFT || e.getCode() == KeyCode.BACK_SPACE) {
                 letters[3].requestFocus();
             }
             if(e.getCode() == KeyCode.RIGHT){
@@ -135,24 +129,22 @@ public class WordleClone extends Application {
 
             scene.setOnKeyPressed(e -> {
                 //Initializes variable guess
-                String guess = "";
+                guess = "";
 
                 if(e.getCode() == KeyCode.ENTER) {
                     //Increment guesses by 1 every time enter is pressed
                     guesses++;
-                    //Concatenates first letter of TextField to guess
+                    //Concatenates ith letter of TextField to guess
                     for (int i = 0; i < 5; i++)
                         guess = guess.concat(letters[i].getText(0, 1));
                 }
                     //Calls checkGuess function
-                    checkGuess(guess, letters, answer, pane, guesses);
+                    checkGuess(guess, letters, answer, pane, guesses, primaryStage);
                     letters[0].requestFocus();
             });
-
             }
 
     private static String getAnswer() {
-        String answer;
         //Function that will return a random word from dictionary txt file, and assigns it to variable answer
 
         try {
@@ -165,7 +157,8 @@ public class WordleClone extends Application {
 
             while ((file.readLine()) != null) {
                 if (index == line) {
-                    answer = (file.readLine());
+                    String answer = (file.readLine());
+                    System.out.println(answer);
                     return answer;
 
                 }
@@ -179,16 +172,14 @@ public class WordleClone extends Application {
         return("Answer cannot be found");
     }
 
-    private static String checkGuess(String guess, TextField[] letters, String answer, BorderPane pane, int guesses) {
+    private static int checkGuess(String guess, TextField[] letters, StringBuffer answer, BorderPane pane, int guesses, Stage primaryStage) {
         //Function that will compare guess to answer
 
         HBox guessesBox = new HBox();
-        Popup popup = new Popup();
-        Stage stage = new Stage();
-        Text correctAnswer = new Text("The correct answer is " + answer);
-        correctAnswer.setFont(Font.font("Verdana", 14));
-
         System.out.println(guess);
+
+        //Converts StringBuffer to String so it can be compared to guess
+        String sAnswer = answer.toString();
         for (int i = 0; i < guess.length(); i++) {
 
             //Compares ith character of guess to ith character in answer, will change TextField to green and sets editable to false if correct letter is in the correct place in the word,
@@ -196,21 +187,86 @@ public class WordleClone extends Application {
             if (guess.charAt(i) == answer.charAt(i)) {
                 letters[i].setStyle("-fx-background-color: green");
                 letters[i].setEditable(false);
-            } else if (answer.indexOf(guess.charAt(i)) != -1) {
+            } else if (sAnswer.indexOf(guess.charAt(i)) != -1) {
                 letters[i].setStyle("-fx-background-color: gray");
             } else {
                 letters[i].setStyle("-fx-background-color: red");
             }
         }
         Text guessText = new Text("Guesses: " + guesses);
-        if(guesses >= 6){
-            popup.show(stage);
+        if(guesses >= 6 && guess.compareTo(sAnswer) != 0){
+            guesses = 0;
+            showAnswer(guess, answer, letters, primaryStage);
+        }
+
+        else if(guess.compareTo(sAnswer) == 0){
+            guesses = 0;
+            showAnswer(guess, answer, letters, primaryStage);
         }
        guessesBox.getChildren().add(guessText);
 
         pane.setBottom(guessesBox);
 
-        return guess;
+        return guesses;
 
     }
+
+    private static void showAnswer(String guess, StringBuffer answer, TextField[] letters, Stage primaryStage) {
+        BorderPane pane = new BorderPane();
+        HBox retryBox = new HBox();
+        Popup popup = new Popup();
+        String sAnswer = answer.toString();
+
+        Text correct = new Text("CORRECT");
+        correct.setFont(Font.font("Verdana", 24));
+
+        Text incorrect = new Text("INCORRECT");
+        incorrect.setFont(Font.font("Verdana", 24));
+
+        Text correctAnswer = new Text("The correct answer is " + answer);
+        correctAnswer.setFont(Font.font("Verdana", 14));
+
+        Text retry = new Text("Retry? ");
+        Button yesBtn = new Button("Yes");
+        Button noBtn = new Button("No");
+
+        //Resets TextFields, gets a new correct answer, and hides popup when the yes button is pressed
+        yesBtn.setOnAction(e -> {
+            resetGame(letters);
+            answer.replace(0, 5, getAnswer());
+            popup.hide();
+        });
+
+        //Closes application if no button is pressed
+        noBtn.setOnAction(e ->
+            System.exit(0)
+        );
+
+        retryBox.getChildren().addAll(retry, yesBtn, noBtn);
+
+        if(guess.compareTo(sAnswer) == 0) {
+            pane.setTop(correct);
+        }
+        else{
+            pane.setTop(incorrect);
+        }
+        pane.setCenter(correctAnswer);
+        pane.setBottom(retryBox);
+
+        pane.setMinHeight(200);
+        pane.setMinWidth(350);
+        pane.setStyle("-fx-background-color: white; -fx-border-color: black");
+
+        popup.getContent().add(pane);
+        popup.show(primaryStage);
+    }
+
+    private static void resetGame(TextField[] letters){
+        for(int i = 0; i < 5; i++){
+            letters[i].setText("");
+            letters[i].setStyle("-fx-background-color: white");
+            letters[i].setEditable(true);
+        }
+    }
+
 }
