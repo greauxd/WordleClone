@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.Random;
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
@@ -130,23 +131,29 @@ public class WordleClone extends Application {
             scene.setOnKeyPressed(e -> {
                 //Initializes variable guess
                 guess = "";
+                try {
 
-                if(e.getCode() == KeyCode.ENTER) {
-                    //Increment guesses by 1 every time enter is pressed
-                    guesses++;
-                    //Concatenates ith letter of TextField to guess
-                    for (int i = 0; i < 5; i++)
-                        guess = guess.concat(letters[i].getText(0, 1));
-                }
+                    if (e.getCode() == KeyCode.ENTER) {
+                        //Increment guesses by 1 every time enter is pressed
+                        guesses++;
+                        //Concatenates ith letter of TextField to guess
+                        for (int i = 0; i < 5; i++)
+                            guess = guess.concat(letters[i].getText(0, 1));
+                    }
                     //Calls checkGuess function
-                    checkGuess(guess, letters, answer, pane, guesses, primaryStage);
+                    guesses = checkGuess(guess, letters, answer, pane, guesses, primaryStage);
                     letters[0].requestFocus();
-            });
+                }
+                //Ignores exception created by pressing enter key on popup
+                catch(Exception ignore){
+                    guesses = 0;
+                }
+                });
             }
 
     private static String getAnswer() {
         //Function that will return a random word from dictionary txt file, and assigns it to variable answer
-
+        String answer;
         try {
             BufferedReader file = new BufferedReader(new FileReader("E:/IntelliJ/WordleClone/src/dictionary.txt"));
 
@@ -157,8 +164,7 @@ public class WordleClone extends Application {
 
             while ((file.readLine()) != null) {
                 if (index == line) {
-                    String answer = (file.readLine());
-                    System.out.println(answer);
+                    answer = (file.readLine());
                     return answer;
 
                 }
@@ -176,7 +182,6 @@ public class WordleClone extends Application {
         //Function that will compare guess to answer
 
         HBox guessesBox = new HBox();
-        System.out.println(guess);
 
         //Converts StringBuffer to String so it can be compared to guess
         String sAnswer = answer.toString();
@@ -193,17 +198,20 @@ public class WordleClone extends Application {
                 letters[i].setStyle("-fx-background-color: red");
             }
         }
-        Text guessText = new Text("Guesses: " + guesses);
         if(guesses >= 6 && guess.compareTo(sAnswer) != 0){
+            //Resets guesses to 0 and shows the answer if user runs out of guesses
             guesses = 0;
             showAnswer(guess, answer, letters, primaryStage);
         }
 
         else if(guess.compareTo(sAnswer) == 0){
+            //Resets guesses to 0 and shows answer if user guesses correctly
             guesses = 0;
             showAnswer(guess, answer, letters, primaryStage);
         }
-       guessesBox.getChildren().add(guessText);
+        //Displays number of guesses
+        Text guessText = new Text("Guesses: " + guesses);
+        guessesBox.getChildren().add(guessText);
 
         pane.setBottom(guessesBox);
 
@@ -212,6 +220,7 @@ public class WordleClone extends Application {
     }
 
     private static void showAnswer(String guess, StringBuffer answer, TextField[] letters, Stage primaryStage) {
+        //Creates popup to show the correct answer
         BorderPane pane = new BorderPane();
         HBox retryBox = new HBox();
         Popup popup = new Popup();
@@ -230,6 +239,8 @@ public class WordleClone extends Application {
         Button yesBtn = new Button("Yes");
         Button noBtn = new Button("No");
 
+        retryBox.requestFocus();
+
         //Resets TextFields, gets a new correct answer, and hides popup when the yes button is pressed
         yesBtn.setOnAction(e -> {
             resetGame(letters);
@@ -237,13 +248,29 @@ public class WordleClone extends Application {
             popup.hide();
         });
 
+        yesBtn.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                resetGame(letters);
+                answer.replace(0, 5, getAnswer());
+                popup.hide();
+            }
+        });
+
         //Closes application if no button is pressed
         noBtn.setOnAction(e ->
             System.exit(0)
         );
 
-        retryBox.getChildren().addAll(retry, yesBtn, noBtn);
+        noBtn.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER)
+                System.exit(0);
+        });
 
+        retryBox.getChildren().addAll(retry, yesBtn, noBtn);
+        retryBox.setAlignment(Pos.CENTER);
+        retryBox.setSpacing(5);
+
+        //Displays correct or incorrect if users guess matches the answer
         if(guess.compareTo(sAnswer) == 0) {
             pane.setTop(correct);
         }
@@ -262,6 +289,7 @@ public class WordleClone extends Application {
     }
 
     private static void resetGame(TextField[] letters){
+        //Function that will reset the TextFields to white, blank text, and editable if user decides to play again
         for(int i = 0; i < 5; i++){
             letters[i].setText("");
             letters[i].setStyle("-fx-background-color: white");
